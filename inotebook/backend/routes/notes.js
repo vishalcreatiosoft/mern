@@ -71,6 +71,31 @@ router.put('/updatenote/:id', fetchuser, async(req, res)=>{
 
 })
 
+//Route 4 - find and delete the note using : /api/notes/deletenote/id
+
+router.delete('/deletenote/:id', fetchuser, async(req, res)=>{
+
+    try{
+        //find the note to delete and delete it.
+        let note = await Notes.findById(req.params.id);
+    
+        if(!note){return res.status(404).send("Not found")}
+        
+        if(note.user.toString() !== req.user.id){
+            res.status(401).send('You dont have access to delete it.');
+        }
+
+        note = await Notes.findByIdAndDelete(req.params.id)
+        res.json({"Successs" : "Note has been deleted", note : note});
+
+    }catch(e){
+        console.log(e.message);
+        res.status(500).send('Internal Server Error');
+    }
+
+})
+
+
 
 
 module.exports = router;
