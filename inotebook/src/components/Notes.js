@@ -2,20 +2,31 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import noteContext from '../context/notes/noteContext';
 import Noteitem from './Noteitem';
 import AddNote from './AddNote';
+import { useNavigate } from 'react-router-dom';
 
-export const Notes = () => {
+export const Notes = (props) => {
 
+    const navigate = useNavigate()
     const context = useContext(noteContext);
-    const {notes, getNotes } = context;
+    const {notes, getNotes, editNote} = context;
     const [note, setnote] = useState({id : "", etitle: "", edescription: "", etag: ""});
-
+    const ref = useRef(null);
     const refClose = useRef(null)
 
-    const handleClick = (e)=>{
+    useEffect(() => {
+        if(localStorage.getItem('token')){
+            getNotes();
+        }else{
+            navigate('/login');
+        }
         
-        console.log('updated notes is ',note);
+        //eslint-disable-next-line 
+    }, [])
+
+    const handleClick = (e)=>{
         editNote(note.id, note.etitle, note.edescription, note.etag);
         refClose.current.click();
+        props.showAlert('Updated Successfully','success');
        
     }
 
@@ -23,21 +34,19 @@ export const Notes = () => {
         setnote({...note, [e.target.name] : e.target.value});
     }
 
-    useEffect(() => {
-        getNotes()
-        // eslint-disable-next-line 
-    }, [])
+    
 
     const updateNote = (currentNote) => {
         ref.current.click();
         setnote({id : currentNote._id, etitle : currentNote.title, edescription : currentNote.description, etag : currentNote.tag });
+        
     }
-    const ref = useRef(null);
+    
 
 
     return (
         <>
-            <AddNote />
+            <AddNote showAlert={props.showAlert} />
 
             {/* Button trigger modal */}
             <button ref={ref} type="button" className="d-none" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -56,11 +65,11 @@ export const Notes = () => {
                             <form className="my-3">
                                 <div className="mb-3">
                                     <label htmlFor="etitle" className="form-label">Title</label>
-                                    <input type="text" className="form-control" id="etitle" name="etitle" value={note.etitle} aria-describedby="emailHelp" onChange={onChange} />
+                                    <input type="text" className="form-control" id="etitle" name="etitle" value={note.etitle} aria-describedby="emailHelp" onChange={onChange} minLength={5} required />
                                 </div>
                                 <div className="mb-3">
                                     <label htmlFor="edescription" className="form-label">Description</label>
-                                    <input type="text" className="form-control" id="edescription" name="edescription" value={note.edescription} onChange={onChange} />
+                                    <input type="text" className="form-control" id="edescription" name="edescription" value={note.edescription} onChange={onChange} minLength={5} required />
                                 </div>
                                 <div className="mb-3">
                                     <label htmlFor="etag" className="form-label">Tag</label>
@@ -69,8 +78,8 @@ export const Notes = () => {
                             </form>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button ref={refClose}  type="button" className="btn btn-primary" onClick={handleClick}>Update Note</button>
+                            <button ref={refClose} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button disabled={note.etitle.length<5 || note.edescription.length<5} type="button" className="btn btn-primary" onClick={handleClick}>Update Note</button>
                         </div>
                     </div>
                 </div>
@@ -78,11 +87,14 @@ export const Notes = () => {
 
             <div className="row my-3">
                 <h2 className="my-3">Your Notes</h2>
-                {
-                    notes.map((note) => {
-                        return <Noteitem key={note._id} updateNote={updateNote} note={note} />
-                    })
-                }
+
+                <div className="container mx-2">
+                    {notes.length === 0 && 'No notes written'}
+                </div>
+
+                {notes.map((note) => {
+                        return <Noteitem key={note._id} updateNote={updateNote} note={note}  showAlert={props.showAlert}/>
+                })}
             </div>
         </>
     )
