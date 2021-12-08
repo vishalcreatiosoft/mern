@@ -17,10 +17,10 @@ router.post('/createuser',[
     ],
     async(req, res)=>{
         let success = false;
-       //If here are error , return bad request and errors
+       //If here  error , return bad request and errors
         const errors = validationResult(req);
         if(!errors.isEmpty()){
-            success = true
+            success = false
             return res.status(400).json({success, errors : errors.array()});
         }
         //check whether the user exist with this email id
